@@ -3,6 +3,7 @@ select
   ,case when CommentScene_ = '76' then '附近直播tab' -----新版本口径CommentScene_='94'
         when CommentScene_ in ('80','94') then '附近更多推荐直播页面'
         when CommentScene_ = '16' then '视频tab_主播直播中'
+        when CommentScene_ = 'temp2' then '直播间滑动'
         else 'other'
   end as CommentScene
   ,'unknown' as tab_id
@@ -17,7 +18,8 @@ where
   substr(ds,0,8)=${YYYYMMDD}
   and duration_<=36000000 -- 为了避免报成时间戳
   and uin_ != 0 and uin_ is not null and liveid_ is not null and liveid_ <> '' and liveid_ > '0'
-  and CommentScene_ in ('16','76','80','94')----新版本口径CommentScene='94'
+  and (CommentScene_ in ('16','76','80','94') 
+       or (CommentScene_ = 'temp2' and get_json_object(unbase64(SessionBuffer_ ), '$.comment_scene') in ('94','80','76'))----新版本口径CommentScene='94'
   and ((device_=2
       and clientversion_>=conv(27001634,16,10)
       and clientversion_<conv(28000000,16,10))
@@ -63,7 +65,8 @@ from
     substr(ds,0,8)=${YYYYMMDD}
     and duration_<=36000000 -- 为了避免报成时间戳
     and uin_ != 0 and uin_ is not null and liveid_ is not null and liveid_ <> '' and liveid_ > '0'
-    and  substr(CommentScene_,1,2) in ( '94','80') 
+    and (substr(CommentScene_,1,2) in ('94','80')
+        or (CommentScene_ = 'temp2' and get_json_object(unbase64(SessionBuffer_ ), '$.comment_scene') in ('94','80'))
     and ((device_=2
     and clientversion_>=conv(28000000,16,10))
         or (device_=1 and clientversion_>=conv(18000023,16,10)))----修改版本号
